@@ -1,9 +1,9 @@
-import { IsOptional, IsInt, IsString } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { IsOptional, IsString } from 'class-validator';
 
-export class BuyNumbersDto {
+export class BuyNumbersDTO {
   @IsOptional()
-  @IsInt()
-  count?: number;
+  count?: number | string;
 
   @IsOptional()
   @IsString()
@@ -13,3 +13,5 @@ export class BuyNumbersDto {
   @IsString()
   vendor?: string;
 }
+
+export class QueryBuyNumbersDTO extends PartialType(BuyNumbersDTO) {}

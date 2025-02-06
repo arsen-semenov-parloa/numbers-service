@@ -1,6 +1,7 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsOptional, IsString } from 'class-validator';
 
-export class SearchAvailableNumbersDto {
+export class AvailableNumbersDTO {
   @IsOptional()
   @IsString()
   number?: string;
@@ -13,3 +14,7 @@ export class SearchAvailableNumbersDto {
   @IsString()
   region?: string;
 }
+
+export class SearchAvailableNumbersDTO extends PartialType(
+  AvailableNumbersDTO,
+) {}
