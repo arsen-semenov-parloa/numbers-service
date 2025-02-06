@@ -1,0 +1,41 @@
+
+services:
+  db:
+    image: mongo:7.0.12-jammy
+    container_name: db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: localdev
+      # MONGODB_USERNAME: root
+      # MONGODB_PASSWORD: localdev
+      # MONGODB_DATABASE: phone_numbers
+      # MONGO_AUTH_MECHANISM: SCRAM-SHA-256
+      AUTH_SOURCE: admin
+    volumes:
+      - ./.data/mongo:/data
+    #volumes:
+    #  - parloa-mongo-numbers-api:/data/db
+
+  app:
+    container_name: numbers-service
+    image: node:22.11-alpine
+    working_dir: /app
+    command: npm run start:debug
+    volumes:
+      - ./:/app
+    ports:
+      - 3000:3000
+    environment:
+      ENVIRONMENT_URL: 'http://localhost'
+      NODE_ENV: 'development'
+      TWILIO_AUTH_TOKEN: 'ACXXXXXXXXXXXXXXXXXXXXXXXX'
+      TWILIO_ACCOUNT_SID: 'XXXXXXXXXXXXXXXXXXXXX'
+      MONOGODB_URI: 'mongodb://root:localdev@db:27017/'
+      NODE_TLS_REJECT_UNAUTHORIZED: 0 # Disable strict certificate validation for self-signed certs
+    depends_on:
+      - db
+
+volumes:
+  parloa-mongo-numbers-api:
