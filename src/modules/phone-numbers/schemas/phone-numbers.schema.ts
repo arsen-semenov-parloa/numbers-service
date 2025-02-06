@@ -18,7 +18,7 @@ export class PhoneNumber {
   number?: string;
 
   @Prop({ type: String })
-  status?: string;
+  status?: string | enumStatus;
 
   @Prop({ type: String })
   pruchaseFrom: string | undefined; // vendor, twilio, nexmo, etc, csv

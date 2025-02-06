@@ -13,9 +13,9 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { SearchAvailableNumbersDto } from './dtos/search-available-numbers.dto';
-import { BuyNumbersDto } from './dtos/buy-numbers.dto';
-import { UpdateNumberDto } from './dtos/update-numbers.dto';
+import { SearchAvailableNumbersDTO } from './dtos/search-available-numbers.dto';
+import { BuyNumbersDTO } from './dtos/buy-numbers.dto';
+import { UpdateNumberDTO } from './dtos/phone-numbers.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { PhoneNumbersService } from './phone-numbers.service';
 
@@ -28,7 +28,7 @@ export class PhoneNumbersController {
   @Get('search-available-numbers')
   @HttpCode(200)
   @Header('Content-Type', 'application/json')
-  async searchNumbers(@Query() query: SearchAvailableNumbersDto) {
+  async searchNumbers(@Query() query: SearchAvailableNumbersDTO) {
     this.logger.log('Searching for numbers', query);
     const result = await this.phoneNumbersService.searchNumbers(query);
     if (result.length > 0) {
@@ -39,21 +39,44 @@ export class PhoneNumbersController {
   }
 
   @Get('buy-numbers')
-  buyNumbers(@Query() query: BuyNumbersDto) {
-    return this.phoneNumbersService.buyNumbers(query);
+  @HttpCode(204)
+  async buyNumbers(@Query() query: BuyNumbersDTO): Promise<void> {
+    try {
+      await this.phoneNumbersService.buyNumbers(query);
+    } catch (error) {
+      this.logger.error('Error buying numbers', error);
+      throw new HttpException(
+        'Failed to buy numbers',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Delete('delete-number')
-  deleteNumber(@Query('number') number: string) {
-    return this.phoneNumbersService.deleteNumber(number);
+  @HttpCode(204)
+  async deleteNumber(@Query('number') number: string) {
+    try {
+      await this.phoneNumbersService.deleteNumber(number);
+    } catch (error) {
+      this.logger.error('Error deleting number', error);
+      throw new HttpException(
+        'Failed to delete number',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Put('update-number')
-  updateNumber(@Body() updateNumberDto: UpdateNumberDto) {
-    // Dummy implementation – replace with your logic.
-    return {
-      status: 'updated',
-      updated: updateNumberDto,
-    };
+  @HttpCode(204)
+  async updateNumber(@Body() updateNumberDTO: UpdateNumberDTO) {
+    try {
+      await this.phoneNumbersService.updateNumber(updateNumberDTO);
+    } catch (error) {
+      this.logger.error('Error updating number', error);
+      throw new HttpException(
+        'Failed to update number',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
