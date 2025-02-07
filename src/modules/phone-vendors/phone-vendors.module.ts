@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PhoneVendorsFactory } from './phone-vendors.factory';
-import { TwilioVendorService } from './twilio.service';
+import { TwilioVendorService } from './twilio/twilio.service';
 
 @Module({
   imports: [],
