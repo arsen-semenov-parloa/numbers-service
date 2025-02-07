@@ -5,7 +5,7 @@ import { PhoneVendorsModule } from '../phone-vendors/phone-vendors.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PhoneNumber, PhoneNumberSchema } from './schemas/phone-numbers.schema';
 import { PhoneVendorsFactory } from '../phone-vendors/phone-vendors.factory';
-import { TwilioVendorService } from '../phone-vendors/twilio.service';
+import { TwilioVendorService } from '../phone-vendors/twilio/twilio.service';
 
 @Module({
   controllers: [PhoneNumbersController],

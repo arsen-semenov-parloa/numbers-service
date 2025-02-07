@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { TwilioVendorService } from './twilio.service';
+import { TwilioVendorService } from './twilio/twilio.service';
 import { error } from 'console';
 
 @Injectable()
