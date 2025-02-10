@@ -1,3 +1,7 @@
 export interface PhoneVendorService {
-  buyNumbers: (count: number, region: string) => Promise<any[]>;
+  buyNumbers: (
+    count: number,
+    region: string,
+    customerId: string,
+  ) => Promise<any[]>;
 }

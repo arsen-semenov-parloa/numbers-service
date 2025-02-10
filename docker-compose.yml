@@ -25,6 +25,11 @@ services:
       - '4010:4010'
     command: mock -h prism https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/json/twilio_api_v2010.json
 
+  prism2:
+    container_name: twilio-api-mock-trunking
+    image: stoplight/prism:4
+    command: mock -h prism2 https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/json/twilio_trunking_v1.json
+
   app:
     container_name: numbers-service
     image: node:22.11-alpine
@@ -41,11 +46,17 @@ services:
       TWILIO_AUTH_TOKEN: SKXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       TWILIO_API_KEY: SKXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       TWILIO_API_SECRET: ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      TWILIO_DE_BUNDLE_SID: 'default-bundle-sid'
+      TWILIO_DE_ADDRESS_SID: 'default-address-sid'
+      TWILIO_DEFAULT_TRUNK_SID: 'default-trunk-sid'
+      TWILIO_MOCK_URL: 'http://prism:4010'
+      TWILIO_MOCK_TRUNKING_URL: 'http://prism2:4010'
       MONOGODB_URI: 'mongodb://root:localdev@db:27017/'
       NODE_TLS_REJECT_UNAUTHORIZED: 0 # Disable strict certificate validation for self-signed certs
     depends_on:
       - db
       - prism
+      - prism2
 
 volumes:
   parloa-mongo-numbers-api:

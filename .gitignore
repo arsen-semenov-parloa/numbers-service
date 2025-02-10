@@ -4,6 +4,7 @@
 /build
 
 .data
+/scripts
 
 # Logs
 logs
