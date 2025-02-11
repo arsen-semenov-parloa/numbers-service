@@ -3,7 +3,7 @@ import mongoose, { HydratedDocument, Types } from 'mongoose';
 
 export type PhoneNumberDocument = HydratedDocument<PhoneNumber>;
 
-mongoose.set('debug', true);
+mongoose.set('debug', false);
 
 enum enumStatus {
   Active = 'active',
@@ -21,7 +21,7 @@ export class PhoneNumber {
   status?: string | enumStatus;
 
   @Prop({ type: String })
-  pruchaseFrom: string | undefined; // vendor, twilio, nexmo, etc, csv
+  pruchaseFrom: string; // vendor, twilio, csv
 
   @Prop({ type: String })
   region: string | undefined;

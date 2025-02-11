@@ -4,8 +4,9 @@ import { SearchAvailableNumbersDTO } from './dtos/search-available-numbers.dto';
 import { BuyNumbersDTO } from './dtos/buy-numbers.dto';
 import { UpdateNumberDTO } from './dtos/phone-numbers.dto';
 import { PhoneNumber } from './schemas/phone-numbers.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { Customers } from './schemas/customers.schema';
 
 @Injectable()
 export class PhoneNumbersService {
@@ -14,13 +15,35 @@ export class PhoneNumbersService {
     private readonly phoneVendorsFactory: PhoneVendorsFactory,
     @InjectModel(PhoneNumber.name)
     private phoneNumberModel: Model<PhoneNumber>,
+    @InjectModel(Customers.name)
+    private readonly customersModel: Model<Customers>,
   ) {}
 
-  // TODO: createdBy
-  async buyNumbers({ count, region, vendor }: BuyNumbersDTO): Promise<number> {
+  // TODO: add createdBy
+  async buyNumbers({
+    count,
+    region,
+    vendor,
+    customerId,
+  }: BuyNumbersDTO): Promise<number> {
     const purchasedFromVendor = vendor ? vendor.toLowerCase() : 'twilio';
-    const countToBuy = count ? parseInt(count as string, 10) : 5;
+    const countToBuy = count ? parseInt(count as string, 10) : 1;
     const regionToBuy = region ? region : 'EU';
+
+    let customerOID: string;
+
+    if (customerId) {
+      try {
+        customerOID = await this.getCustomerOID(customerId);
+        this.logger.log(`Customer ID ${customerId} found, OID: ${customerOID}`);
+      } catch (error) {
+        this.logger.error(error);
+        throw new Error('Failed to find customer'); // TODO: proper error handling
+      }
+    } else {
+      this.logger.log('Customer not provided');
+      throw new Error('Customer ID is required');
+    }
 
     const vendorInstance = this.phoneVendorsFactory.get(purchasedFromVendor);
     if (vendorInstance) {
@@ -31,11 +54,18 @@ export class PhoneNumbersService {
         const numbers = await vendorInstance.buyNumbers(
           countToBuy,
           regionToBuy,
+          customerId,
         );
         this.logger.log(
-          `Bought ${numbers.length} phone numbers from ${purchasedFromVendor}, numbers: ${numbers}`,
+          `Bought ${numbers.length} phone numbers from ${purchasedFromVendor}, numbers: ${numbers}, customer_id: ${customerId}`,
         );
-        await this.storeNumbers(numbers, regionToBuy, purchasedFromVendor);
+
+        await this.storeNumbers(
+          numbers,
+          regionToBuy,
+          purchasedFromVendor,
+          customerOID,
+        );
         return numbers.length;
       } catch (error) {
         this.logger.error('Error buying numbers', error);
@@ -47,10 +77,19 @@ export class PhoneNumbersService {
     }
   }
 
-  async storeNumbers(
+  private async getCustomerOID(customerId: string): Promise<string> {
+    const customer = await this.customersModel.findOne({ customerId }).exec();
+    if (!customer) {
+      throw new Error(`Customer with ID ${customerId} not found`);
+    }
+    return customer._id.toString();
+  }
+
+  private async storeNumbers(
     numbers: string[],
     regionFrom: string,
     purchaseFrom: string,
+    customerId?: string,
   ): Promise<void> {
     const phoneNumbers = numbers.map((number) => ({
       number,
@@ -58,7 +97,7 @@ export class PhoneNumbersService {
       vendor: purchaseFrom,
       status: 'new',
       instanceId: '',
-      customerId: '',
+      customerId: new Types.ObjectId(customerId) || '',
       tenantId: '',
     }));
 

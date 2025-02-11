@@ -6,7 +6,8 @@ import Response from 'twilio/lib/http/response';
 
 @Injectable()
 export class CustomClientService implements RequestClient {
-  private auth: { username: string; password: string } | undefined;
+  //private readonly logger = new Logger(CustomClientService.name);
+  private auth: { username: string; password: string };
 
   constructor(
     private readonly timeout: number,
@@ -19,8 +20,8 @@ export class CustomClientService implements RequestClient {
 
   defaultTimeout: number;
   axios: AxiosInstance;
-  lastResponse?: Response<any> | undefined;
-  lastRequest?: Request<any> | undefined;
+  lastResponse?: Response<any>;
+  lastRequest?: Request<any>;
   autoRetry: boolean;
   maxRetryDelay: number;
   maxRetries: number;
@@ -72,8 +73,13 @@ export class CustomClientService implements RequestClient {
     };
 
     try {
+      //this.logger.log('Making HTTP request', options);
       const response = await axios.request(options);
-      return response.data;
+      //this.logger.log('HTTP request response', response.data);
+      return {
+        statusCode: response.status,
+        body: response.data,
+      };
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new HttpException(

@@ -12,6 +12,10 @@ export class BuyNumbersDTO {
   @IsOptional()
   @IsString()
   vendor?: string;
+
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 }
 
 export class QueryBuyNumbersDTO extends PartialType(BuyNumbersDTO) {}
