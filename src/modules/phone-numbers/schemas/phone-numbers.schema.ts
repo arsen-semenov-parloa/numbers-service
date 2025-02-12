@@ -6,10 +6,10 @@ export type PhoneNumberDocument = HydratedDocument<PhoneNumber>;
 mongoose.set('debug', true);
 
 export enum NumberStatus {
-  Active = 'active', // assigned to a instance
-  Inactive = 'inactive', // not assigned to any instance. released to pool
-  New = 'new', // newly created, not assigned to any instance
-  Deleted = 'deleted', // deleted
+  ACTIVE = 'active', // assigned to a instance
+  INACTIVE = 'inactive', // not assigned to any instance. released to pool
+  NEW = 'new', // newly created, not assigned to any instance
+  DELETED = 'deleted', // deleted
 }
 
 @Schema({ timestamps: true, collection: 'phone_numbers' })

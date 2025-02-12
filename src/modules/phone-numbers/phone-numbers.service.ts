@@ -183,7 +183,7 @@ export class PhoneNumbersService {
     }
     const numberToUpdate = number.startsWith('+') ? number : `+${number}`;
 
-    if (status === NumberStatus.Active && !instance_id) {
+    if (status === NumberStatus.ACTIVE && !instance_id) {
       // validate instance_id against existing instances
       throw new BadRequestException(
         'Instance ID is required for active number',
@@ -197,11 +197,11 @@ export class PhoneNumbersService {
       tenantId: tenant_id,
     };
 
-    if (status === NumberStatus.Inactive) {
+    if (status === NumberStatus.INACTIVE) {
       setUpdate.instanceId = '';
     }
 
-    if (status === NumberStatus.Deleted) {
+    if (status === NumberStatus.DELETED) {
       setUpdate.instanceId = '';
       setUpdate.customerId = '';
       setUpdate.tenantId = '';
