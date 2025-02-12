@@ -40,7 +40,6 @@ services:
     ports:
       - 3000:3000
     environment:
-      ENVIRONMENT_URL: 'http://localhost'
       NODE_ENV: 'development'
       TWILIO_ACCOUNT_SID: ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       TWILIO_AUTH_TOKEN: SKXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -52,7 +51,6 @@ services:
       TWILIO_MOCK_URL: 'http://prism:4010'
       TWILIO_MOCK_TRUNKING_URL: 'http://prism2:4010'
       MONOGODB_URI: 'mongodb://root:localdev@db:27017/'
-      NODE_TLS_REJECT_UNAUTHORIZED: 0 # Disable strict certificate validation for self-signed certs
     depends_on:
       - db
       - prism
