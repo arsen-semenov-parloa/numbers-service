@@ -3,28 +3,28 @@ import mongoose, { HydratedDocument, Types } from 'mongoose';
 
 export type PhoneNumberDocument = HydratedDocument<PhoneNumber>;
 
-mongoose.set('debug', false);
+mongoose.set('debug', true);
 
-enum enumStatus {
-  Active = 'active',
-  Inactive = 'inactive',
-  New = 'new',
-  Deleted = 'deleted',
+export enum NumberStatus {
+  Active = 'active', // assigned to a instance
+  Inactive = 'inactive', // not assigned to any instance. released to pool
+  New = 'new', // newly created, not assigned to any instance
+  Deleted = 'deleted', // deleted
 }
 
 @Schema({ timestamps: true, collection: 'phone_numbers' })
 export class PhoneNumber {
   @Prop({ type: String })
-  number?: string;
+  number: string;
 
   @Prop({ type: String })
-  status?: string | enumStatus;
+  status: NumberStatus;
 
   @Prop({ type: String })
-  pruchaseFrom: string; // vendor, twilio, csv
+  vendor: string; // vendor or csv
 
   @Prop({ type: String })
-  region: string | undefined;
+  region?: string;
 
   @Prop({ type: Types.ObjectId })
   tenantId?: Types.ObjectId;
@@ -35,13 +35,16 @@ export class PhoneNumber {
   @Prop({ type: Types.ObjectId })
   customerId?: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId })
+  @Prop({ type: String })
   createdBy?: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId })
+  @Prop({ type: Date })
   ceatedAt?: Date;
 
-  @Prop({ type: Types.ObjectId })
+  @Prop({ type: Date, default: `` })
+  end_date?: Date;
+
+  @Prop({ type: Date })
   updatedAt?: Date;
 }
 

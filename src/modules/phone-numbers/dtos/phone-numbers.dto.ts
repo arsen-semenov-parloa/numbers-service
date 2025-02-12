@@ -1,5 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty, IsString, Matches, IsOptional } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, Matches } from 'class-validator';
+import { NumberStatus } from '../schemas/phone-numbers.schema';
 
 export class PhoneNumberDTO {
   @IsNotEmpty()
@@ -7,11 +8,11 @@ export class PhoneNumberDTO {
   @Matches(/^\+?[1-9]\d{1,14}$/, {
     message: 'Phone number must be in E.164 format',
   })
-  number?: string;
+  number: string;
 
-  @IsOptional()
-  @IsString()
-  status?: string;
+  @IsNotEmpty()
+  @IsEnum(NumberStatus)
+  status: NumberStatus;
 
   @IsString()
   instance_id?: string;
@@ -27,3 +28,14 @@ export class PhoneNumberDTO {
 }
 
 export class UpdateNumberDTO extends PartialType(PhoneNumberDTO) {}
+
+export class DeletePhoneNumberDTO {
+  @IsNotEmpty()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Phone number must be in E.164 format',
+  })
+  number: string;
+}
+
+export class DeleteNumberDTO extends PartialType(DeletePhoneNumberDTO) {}

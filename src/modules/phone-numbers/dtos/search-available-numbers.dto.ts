@@ -13,6 +13,18 @@ export class AvailableNumbersDTO {
   @IsOptional()
   @IsString()
   region?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  customerId?: string;
+
+  @IsOptional()
+  @IsString()
+  instanceId?: string;
 }
 
 export class SearchAvailableNumbersDTO extends PartialType(

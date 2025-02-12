@@ -1,9 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PhoneVendorsFactory } from '../phone-vendors/phone-vendors.factory';
 import { SearchAvailableNumbersDTO } from './dtos/search-available-numbers.dto';
 import { BuyNumbersDTO } from './dtos/buy-numbers.dto';
-import { UpdateNumberDTO } from './dtos/phone-numbers.dto';
-import { PhoneNumber } from './schemas/phone-numbers.schema';
+import { DeleteNumberDTO, UpdateNumberDTO } from './dtos/phone-numbers.dto';
+import { PhoneNumber, NumberStatus } from './schemas/phone-numbers.schema';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Customers } from './schemas/customers.schema';
@@ -25,7 +31,7 @@ export class PhoneNumbersService {
     region,
     vendor,
     customerId,
-  }: BuyNumbersDTO): Promise<number> {
+  }: BuyNumbersDTO): Promise<any[]> {
     const purchasedFromVendor = vendor ? vendor.toLowerCase() : 'twilio';
     const countToBuy = count ? parseInt(count as string, 10) : 1;
     const regionToBuy = region ? region : 'EU';
@@ -35,14 +41,16 @@ export class PhoneNumbersService {
     if (customerId) {
       try {
         customerOID = await this.getCustomerOID(customerId);
-        this.logger.log(`Customer ID ${customerId} found, OID: ${customerOID}`);
+        this.logger.debug(
+          `Customer ID ${customerId} found, OID: ${customerOID}`,
+        );
       } catch (error) {
         this.logger.error(error);
-        throw new Error('Failed to find customer'); // TODO: proper error handling
+        throw new BadRequestException('Customer not found');
       }
     } else {
       this.logger.log('Customer not provided');
-      throw new Error('Customer ID is required');
+      throw new BadRequestException('Customer ID is required');
     }
 
     const vendorInstance = this.phoneVendorsFactory.get(purchasedFromVendor);
@@ -66,14 +74,14 @@ export class PhoneNumbersService {
           purchasedFromVendor,
           customerOID,
         );
-        return numbers.length;
+        return numbers;
       } catch (error) {
         this.logger.error('Error buying numbers', error);
-        return 0;
+        throw new InternalServerErrorException('Failed to buy numbers');
       }
     } else {
       this.logger.error(`Vendor ${purchasedFromVendor} not found`);
-      return 0;
+      throw new NotFoundException(`Vendor ${purchasedFromVendor} not found`);
     }
   }
 
@@ -113,29 +121,46 @@ export class PhoneNumbersService {
   async searchNumbers(
     query: SearchAvailableNumbersDTO,
   ): Promise<PhoneNumber[]> {
-    const { number, region, vendor } = query;
-    this.logger.log(
-      `Searching for number: ${number}, region: ${region}, vendor: ${vendor}`,
+    const { number, vendor, region, status, instanceId, customerId } = query;
+    this.logger.debug(
+      `Searching for number: ${number}, region: ${region}, vendor: ${vendor}, status: ${status}, instanceId: ${instanceId}, customerId: ${customerId}`,
     );
 
     const searchCriteria: any = {};
     if (number) searchCriteria.number = number;
     if (region) searchCriteria.region = region;
     if (vendor) searchCriteria.vendor = vendor;
+    if (status) searchCriteria.status = status;
+    if (instanceId) searchCriteria.instanceId = new Types.ObjectId(instanceId);
+    if (customerId) searchCriteria.customerId = new Types.ObjectId(customerId);
 
     return this.phoneNumberModel.find(searchCriteria).exec();
   }
 
-  async deleteNumber(number: string): Promise<void> {
+  async deleteNumber(deleteNumberDTO: DeleteNumberDTO): Promise<void> {
+    if (!deleteNumberDTO.number) {
+      throw new BadRequestException('Number is required');
+    }
+    const numberToUpdate = deleteNumberDTO.number.startsWith('+')
+      ? deleteNumberDTO.number
+      : `+${deleteNumberDTO.number}`;
+
+    const numberExists = await this.phoneNumberModel
+      .findOne({ number: numberToUpdate })
+      .exec();
+
+    if (!numberExists) {
+      throw new BadRequestException('Number not found');
+    }
+
     try {
       await this.phoneNumberModel
         .updateOne(
-          { number },
+          { number: numberToUpdate },
           {
             $set: {
-              status: 'deleted',
+              status: 'inactive',
               instanceId: '',
-              customerId: '',
               tenantId: '',
             },
           },
@@ -143,30 +168,57 @@ export class PhoneNumbersService {
         .exec();
     } catch (error) {
       this.logger.error('Error deleting number', error);
-      throw new Error('Failed to delete number');
+      throw new InternalServerErrorException('Failed to delete number');
     }
   }
 
   async updateNumber(updateNumberDto: UpdateNumberDTO): Promise<void> {
     const { number, status, instance_id, customer_id, tenant_id } =
       updateNumberDto;
+    if (!number) {
+      throw new BadRequestException('Number is required');
+    }
+    if (!status) {
+      throw new BadRequestException('Status is required');
+    }
+    const numberToUpdate = number.startsWith('+') ? number : `+${number}`;
+
+    if (status === NumberStatus.Active && !instance_id) {
+      // validate instance_id against existing instances
+      throw new BadRequestException(
+        'Instance ID is required for active number',
+      );
+    }
+
+    const setUpdate = {
+      numberStatus: status,
+      instanceId: instance_id,
+      customerId: customer_id,
+      tenantId: tenant_id,
+    };
+
+    if (status === NumberStatus.Inactive) {
+      setUpdate.instanceId = '';
+    }
+
+    if (status === NumberStatus.Deleted) {
+      setUpdate.instanceId = '';
+      setUpdate.customerId = '';
+      setUpdate.tenantId = '';
+    }
+
     try {
       await this.phoneNumberModel
         .updateOne(
-          { number },
+          { numberToUpdate },
           {
-            $set: {
-              status,
-              instance_id,
-              customer_id,
-              tenant_id,
-            },
+            $set: setUpdate,
           },
         )
         .exec();
     } catch (error) {
       this.logger.error('Error updating number', error);
-      throw new Error('Failed to update number');
+      throw new InternalServerErrorException('Failed to update number');
     }
   }
 }
