@@ -2,7 +2,7 @@
 
 The Parloa Phone Numbers Service is a centralized depo and service for phone numbers management.
 
-## Viewing Swagger docs
+## Swagger docs
 
 Swagger (OpenAPI) docs are available on http://localhost:3000/api when running locally.
 
